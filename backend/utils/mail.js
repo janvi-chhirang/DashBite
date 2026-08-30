@@ -2,23 +2,26 @@ import nodemailer from "nodemailer";
 import dns from "node:dns";
 import dotenv from "dotenv";
 
-// Force Node.js to resolve IPv4 addresses first to prevent ENETUNREACH on IPv6
+// Force IPv4 to bypass Render's broken IPv6 routing
 dns.setDefaultResultOrder("ipv4first");
 
 dotenv.config();
 
-// Sanitize email credentials
+// Sanitize credentials
 const authUser = process.env.EMAIL?.replace(/['"<>]/g, "").trim();
 const authPass = process.env.EMAIL_PASSWORD?.replace(/['"<>]/g, "").trim();
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
-  secure: true,
+  secure: true, // SSL on port 465 (Render blocks 587)
   auth: {
     user: authUser,
-    pass: authPass, // Must be a 16-character Google App Password
+    pass: authPass, // Google 16-character App Password
   },
+  connectionTimeout: 20000, // 20s timeout allowance
+  greetingTimeout: 20000,
+  socketTimeout: 30000,
 });
 
 export const sendOtpMail = async (to, otp) => {
@@ -31,7 +34,7 @@ export const sendOtpMail = async (to, otp) => {
   }
 
   return await transporter.sendMail({
-    from: authUser,
+    from: `"Support" <${authUser}>`,
     to: recipient,
     subject: "Reset Your Password",
     html: `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`,
@@ -50,7 +53,7 @@ export const sendDeliveryOTP = async (user, otp) => {
     .trim();
 
   return await transporter.sendMail({
-    from: authUser,
+    from: `"Delivery Team" <${authUser}>`,
     to: cleanRecipient,
     subject: "Delivery Confirmation OTP",
     html: `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`,
