@@ -13,8 +13,9 @@ const authPass = process.env.EMAIL_PASSWORD?.replace(/['"<>]/g, "").trim();
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false, // STARTTLS on port 587 — port 465 is often blocked on Render
+  requireTLS: true,
   family: 4, // force IPv4 - Render's network can fail to reach Gmail over IPv6
   auth: {
     user: authUser,
