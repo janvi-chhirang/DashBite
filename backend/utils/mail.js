@@ -1,6 +1,11 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import dns from "dns";
 dotenv.config();
+
+// Force Node to prefer IPv4 when resolving hostnames — Render's outbound
+// network can fail (ENETUNREACH) when Node picks Gmail's IPv6 address.
+dns.setDefaultResultOrder("ipv4first");
 
 // Sanitize email credentials
 const authUser = process.env.EMAIL?.replace(/['"<>]/g, "").trim();
@@ -18,9 +23,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendOtpMail = async (to, otp) => {
-  const recipient = (typeof to === "object" ? to?.email : to)
-    ?.replace(/['"<>]/g, "")
-    .trim();
+  const recipient = (typeof to === "object" ? to?.email : to)?.replace(/['"<>]/g, "").trim();
 
   await transporter.sendMail({
     from: authUser,
@@ -37,9 +40,7 @@ export const sendDeliveryOTP = async (user, otp) => {
     throw new Error("Recipient email address is missing");
   }
 
-  const cleanRecipient = String(rawEmail)
-    .replace(/['"<>]/g, "")
-    .trim();
+  const cleanRecipient = String(rawEmail).replace(/['"<>]/g, "").trim();
 
   await transporter.sendMail({
     from: authUser,
