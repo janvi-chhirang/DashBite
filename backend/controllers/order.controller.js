@@ -130,7 +130,7 @@ export const placeOrder = async (req, res) => {
     const io = req.app.get("io");
     if (io) {
       newOrder.shopOrders.forEach((shopOrder) => {
-        const ownerSocketId = shopOrder.owner.socketId;
+        const ownerSocketId = shopOrder.owner?.socketId;
         if (ownerSocketId) {
           io.to(ownerSocketId).emit("newOrder", {
             _id: newOrder._id,
@@ -190,9 +190,8 @@ export const verifyPayment = async (req, res) => {
 
     const io = req.app.get("io");
     if (io) {
-      // ✅ Fixed: changed newOrder to order
       order.shopOrders.forEach((shopOrder) => {
-        const ownerSocketId = shopOrder.owner?.socketId; // Added optional chaining for safety
+        const ownerSocketId = shopOrder.owner?.socketId;
         if (ownerSocketId) {
           io.to(ownerSocketId).emit("newOrder", {
             _id: order._id,
@@ -657,6 +656,16 @@ export const getDeliveryBoyCurrentAssignment = async (req, res) => {
       });
     }
 
+    // Safety check: Agar order deliver ho chuka hai to current assignment nahi dikhana
+    if (shopOrder.status === "Delivered" || currentAssignment.order.status === "Delivered") {
+      currentAssignment.status = "Completed";
+      await currentAssignment.save();
+      return res.status(404).json({
+        success: false,
+        message: "Assignment is already delivered and completed",
+      });
+    }
+
     let deliveryBoyLocation = { lat: null, lon: null };
     const boyCoords = currentAssignment.assignedTo?.location?.coordinates;
     if (Array.isArray(boyCoords) && boyCoords.length === 2) {
@@ -771,7 +780,6 @@ export const sendDeliveryOTP = async (req, res) => {
   }
 };
 
-
 export const verifyDeliveryOTP = async (req, res) => {
   try {
     const { orderId, shopOrderId, otp } = req.body;
@@ -785,7 +793,6 @@ export const verifyDeliveryOTP = async (req, res) => {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Single shop order ya nested shopOrders match karein
     let targetShopOrder = null;
     if (order.shopOrders && order.shopOrders.length > 0) {
       targetShopOrder = shopOrderId
@@ -797,19 +804,32 @@ export const verifyDeliveryOTP = async (req, res) => {
       return res.status(404).json({ message: "Shop order details not found" });
     }
 
-    // OTP verification check
-    if (targetShopOrder.otp && targetShopOrder.otp.toString() !== otp.toString()) {
+    // Fix 1: Match with deliveryOtp or otp field
+    const savedOtp = targetShopOrder.deliveryOtp || targetShopOrder.otp;
+    if (savedOtp && savedOtp.toString() !== otp.toString()) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    // Status update to 'Delivered'
+    // Status updates
     targetShopOrder.status = "Delivered";
     targetShopOrder.deliveredAt = new Date();
     order.status = "Delivered";
 
     await order.save();
 
-    // ⚡ Socket.IO Realtime Event Broadcast
+    // Fix 2: Mark DeliveryAssignment status as Completed so it vanishes from active screen
+    if (targetShopOrder.assignment) {
+      await DeliveryAssignment.findByIdAndUpdate(targetShopOrder.assignment, {
+        status: "Completed",
+      });
+    } else {
+      await DeliveryAssignment.findOneAndUpdate(
+        { order: order._id, assignedTo: req.userId },
+        { status: "Completed" }
+      );
+    }
+
+    // Realtime Socket Event Dispatch
     const io = req.app.get("io");
     if (io) {
       io.emit("update-status", {
