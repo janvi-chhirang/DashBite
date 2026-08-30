@@ -1,11 +1,11 @@
 import nodemailer from "nodemailer";
+import dns from "node:dns";
 import dotenv from "dotenv";
-import dns from "dns";
-dotenv.config();
 
-// Force Node to prefer IPv4 when resolving hostnames — Render's outbound
-// network can fail (ENETUNREACH) when Node picks Gmail's IPv6 address.
+// Force Node.js to resolve IPv4 addresses first to prevent ENETUNREACH on IPv6
 dns.setDefaultResultOrder("ipv4first");
+
+dotenv.config();
 
 // Sanitize email credentials
 const authUser = process.env.EMAIL?.replace(/['"<>]/g, "").trim();
@@ -13,20 +13,24 @@ const authPass = process.env.EMAIL_PASSWORD?.replace(/['"<>]/g, "").trim();
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // STARTTLS on port 587 — port 465 is often blocked on Render
-  requireTLS: true,
-  family: 4, // force IPv4 - Render's network can fail to reach Gmail over IPv6
+  port: 465,
+  secure: true,
   auth: {
     user: authUser,
-    pass: authPass,
+    pass: authPass, // Must be a 16-character Google App Password
   },
 });
 
 export const sendOtpMail = async (to, otp) => {
-  const recipient = (typeof to === "object" ? to?.email : to)?.replace(/['"<>]/g, "").trim();
+  const recipient = (typeof to === "object" ? to?.email : to)
+    ?.replace(/['"<>]/g, "")
+    .trim();
 
-  await transporter.sendMail({
+  if (!recipient) {
+    throw new Error("Recipient email address is missing");
+  }
+
+  return await transporter.sendMail({
     from: authUser,
     to: recipient,
     subject: "Reset Your Password",
@@ -41,9 +45,11 @@ export const sendDeliveryOTP = async (user, otp) => {
     throw new Error("Recipient email address is missing");
   }
 
-  const cleanRecipient = String(rawEmail).replace(/['"<>]/g, "").trim();
+  const cleanRecipient = String(rawEmail)
+    .replace(/['"<>]/g, "")
+    .trim();
 
-  await transporter.sendMail({
+  return await transporter.sendMail({
     from: authUser,
     to: cleanRecipient,
     subject: "Delivery Confirmation OTP",
