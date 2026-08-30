@@ -25,7 +25,7 @@ import { io } from "socket.io-client";
 import { setSocket, updateRealTimeOrderStatus } from "./redux/userSlice";
 import { Toaster } from "react-hot-toast";
 
-export const serverUrl = "http://localhost:8000";
+export const serverUrl = "https://dashbite-backend.onrender.com";
 
 const App = () => {
   useUpdateLocation();
