@@ -20,7 +20,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "https://dashbite-isyw.onrender.com",
     credentials: true,
     methods: ["GET", "POST"],
   },
@@ -31,7 +31,7 @@ const PORT = process.env.PORT || 8000;
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "https://dashbite-isyw.onrender.com",
     credentials: true,
   })
 );

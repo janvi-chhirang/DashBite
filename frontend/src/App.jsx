@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import SignUp from "./pages/signup";
-import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp.jsx";
+import SignIn from "./pages/SignIn.jsx";
 import ForgotPassword from "./pages/ForgotPassword";
 import useGetCurrUser from "./hooks/useGetCurrUser";
 import AddItems from "./pages/AddItems";
@@ -25,7 +25,7 @@ import { io } from "socket.io-client";
 import { setSocket, updateRealTimeOrderStatus } from "./redux/userSlice";
 import { Toaster } from "react-hot-toast";
 
-export const serverUrl = "http://localhost:8000";
+export const serverUrl = "https://dashbite-backend.onrender.com";
 
 const App = () => {
   useUpdateLocation();
