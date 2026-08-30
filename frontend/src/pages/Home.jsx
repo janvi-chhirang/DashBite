@@ -1,6 +1,6 @@
 import React from "react";
 import { useSelector } from "react-redux";
-import UserDashBoard from "./../components/UserDashBoard";
+import UserDashBoard from "./../components/UserDashBoard.jsx";
 import OwnerDashBoard from "./../components/OwnerDashBoard";
 import DeliveryBoyDashBoard from "./../components/DeliveryBoyDashBoard";
 import Nav from "../components/Nav";
