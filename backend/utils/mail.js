@@ -4,7 +4,7 @@ dotenv.config();
 
 // Sanitize email credentials
 const authUser = process.env.EMAIL?.replace(/['"<>]/g, "").trim();
-const authPass = process.env.PASSWORD?.replace(/['"<>]/g, "").trim();
+const authPass = process.env.EMAIL_PASSWORD?.replace(/['"<>]/g, "").trim();
 
 const transporter = nodemailer.createTransport({
   service: "Gmail",
