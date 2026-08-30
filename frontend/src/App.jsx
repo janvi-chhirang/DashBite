@@ -1,5 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import SignUp from "./pages/signup";
+import SignUp from "./pages/Signup.jsx";
 import SignIn from "./pages/SignIn";
 import ForgotPassword from "./pages/ForgotPassword";
 import useGetCurrUser from "./hooks/useGetCurrUser";
