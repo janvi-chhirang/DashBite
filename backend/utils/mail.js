@@ -7,9 +7,10 @@ const authUser = process.env.EMAIL?.replace(/['"<>]/g, "").trim();
 const authPass = process.env.EMAIL_PASSWORD?.replace(/['"<>]/g, "").trim();
 
 const transporter = nodemailer.createTransport({
-  service: "Gmail",
+  host: "smtp.gmail.com",
   port: 465,
   secure: true,
+  family: 4, // force IPv4 - Render's network can fail to reach Gmail over IPv6
   auth: {
     user: authUser,
     pass: authPass,
@@ -17,7 +18,9 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendOtpMail = async (to, otp) => {
-  const recipient = (typeof to === "object" ? to?.email : to)?.replace(/['"<>]/g, "").trim();
+  const recipient = (typeof to === "object" ? to?.email : to)
+    ?.replace(/['"<>]/g, "")
+    .trim();
 
   await transporter.sendMail({
     from: authUser,
@@ -34,7 +37,9 @@ export const sendDeliveryOTP = async (user, otp) => {
     throw new Error("Recipient email address is missing");
   }
 
-  const cleanRecipient = String(rawEmail).replace(/['"<>]/g, "").trim();
+  const cleanRecipient = String(rawEmail)
+    .replace(/['"<>]/g, "")
+    .trim();
 
   await transporter.sendMail({
     from: authUser,
