@@ -33,7 +33,7 @@ const signUp = async (req, res) => {
     const token = await genToken(user._id);
     res.cookie("token", token, {
       secure: true,
-      sameSite: none,
+      sameSite: "none",
       maxAge: 1 * 24 * 60 * 60 * 1000,
       httpOnly: true,
     });
@@ -73,7 +73,7 @@ const signIn = async (req, res) => {
     const token = await genToken(user._id);
     res.cookie("token", token, {
       secure: true,
-      sameSite: none,
+      sameSite: "none",
       maxAge: 1 * 24 * 60 * 60 * 1000,
       httpOnly: true,
     });
@@ -184,7 +184,7 @@ const googleAuth = async (req, res) => {
     const token = await genToken(user._id);
     res.cookie("token", token, {
       secure: true,
-      sameSite: none,
+      sameSite: "none",
       maxAge: 1 * 24 * 60 * 60 * 1000,
       httpOnly: true,
     });
