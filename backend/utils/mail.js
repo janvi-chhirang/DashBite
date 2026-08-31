@@ -5,13 +5,14 @@ dotenv.config();
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
   port: 465,
-  secure: true, // Port 465 ke liye true zaroori hai
+  secure: true,
+  family: 4, // <-- Force IPv4 (fixes ENETUNREACH on Render)
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: false, // Cloud hosting timeouts prevent karta hai
+    rejectUnauthorized: false,
   },
 });
 
