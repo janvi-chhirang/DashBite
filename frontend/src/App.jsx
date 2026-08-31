@@ -29,14 +29,14 @@ export const serverUrl = "https://dashbite-backend.onrender.com";
 
 const App = () => {
   useUpdateLocation();
-  useGetCurrUser();
+  const { loading: userLoading } = useGetCurrUser() || {};
   useGetCity();
   useGetShop();
   useGetShopByCity();
   useGetItemByCity();
   useGetMyOrders();
 
-  const { userData } = useSelector((state) => state.user || {});
+  const { userData, loading } = useSelector((state) => state.user || {});
 
   const currentUser = userData?.user || userData;
   const currentUserId = currentUser?._id;
@@ -66,12 +66,22 @@ const App = () => {
     };
   }, [currentUserId, dispatch]);
 
+  // Refresh ke time jab tak user fetch ho raha hai, routes redirect na karein
+  const isAuthChecking = loading || userLoading;
+  if (isAuthChecking && !userData) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-gray-50">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 2500, 
+          duration: 2500,
           style: {
             background: "#ffffff",
             color: "#1f2937",
@@ -85,13 +95,13 @@ const App = () => {
           },
           success: {
             iconTheme: {
-              primary: "#10b981", 
+              primary: "#10b981",
               secondary: "#ffffff",
             },
           },
           error: {
             iconTheme: {
-              primary: "#ef4444", 
+              primary: "#ef4444",
               secondary: "#ffffff",
             },
           },
