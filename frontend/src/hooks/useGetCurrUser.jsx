@@ -1,12 +1,13 @@
-import React from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { serverUrl } from "./../App";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice";
 
 const useGetCurrUser = () => {
-  const dispatch=useDispatch();
+  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -16,10 +17,14 @@ const useGetCurrUser = () => {
         dispatch(setUserData(result.data));
       } catch (error) {
         console.log(error);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchUser()
+    fetchUser();
   }, [dispatch]);
+
+  return { loading };
 };
 
 export default useGetCurrUser;

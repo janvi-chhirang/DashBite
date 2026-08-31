@@ -29,14 +29,14 @@ export const serverUrl = "https://dashbite-backend.onrender.com";
 
 const App = () => {
   useUpdateLocation();
-  const { loading: userLoading } = useGetCurrUser() || {};
+  const { loading: authLoading } = useGetCurrUser();
   useGetCity();
   useGetShop();
   useGetShopByCity();
   useGetItemByCity();
   useGetMyOrders();
 
-  const { userData, loading } = useSelector((state) => state.user || {});
+  const { userData } = useSelector((state) => state.user || {});
 
   const currentUser = userData?.user || userData;
   const currentUserId = currentUser?._id;
@@ -66,9 +66,8 @@ const App = () => {
     };
   }, [currentUserId, dispatch]);
 
-  // Refresh ke time jab tak user fetch ho raha hai, routes redirect na karein
-  const isAuthChecking = loading || userLoading;
-  if (isAuthChecking && !userData) {
+  // Jab tak backend se user verify ho raha hai, routes redirect na karein
+  if (authLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-gray-50">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-500 border-t-transparent"></div>
