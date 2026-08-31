@@ -1,12 +1,7 @@
-import * as brevo from "@getbrevo/brevo";
 import dotenv from "dotenv";
 dotenv.config();
 
-const apiInstance = new brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(
-  brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
-);
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 export const sendOtpMail = async (to, otp) => {
   try {
@@ -16,15 +11,29 @@ export const sendOtpMail = async (to, otp) => {
 
     if (!recipient) throw new Error("Recipient email is missing");
 
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
-    sendSmtpEmail.subject = "Reset Your Password";
-    sendSmtpEmail.htmlContent = `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`;
-    sendSmtpEmail.sender = { name: "DashBite", email: "janvichhirang@gmail.com" };
-    sendSmtpEmail.to = [{ email: recipient }];
+    const response = await fetch(BREVO_API_URL, {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "DashBite", email: "janvichhirang@gmail.com" },
+        to: [{ email: recipient }],
+        subject: "Reset Your Password",
+        htmlContent: `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+      }),
+    });
 
-    return await apiInstance.sendTransacEmail(sendSmtpEmail);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to send email");
+    }
+
+    return data;
   } catch (error) {
-    console.error("Brevo sendOtpMail Error:", error.response?.body || error.message);
+    console.error("Brevo sendOtpMail Error:", error.message);
     throw error;
   }
 };
@@ -36,15 +45,29 @@ export const sendDeliveryOTP = async (user, otp) => {
 
     const cleanRecipient = String(rawEmail).replace(/['"<>]/g, "").trim();
 
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
-    sendSmtpEmail.subject = "Delivery Confirmation OTP";
-    sendSmtpEmail.htmlContent = `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`;
-    sendSmtpEmail.sender = { name: "DashBite", email: "janvichhirang@gmail.com" };
-    sendSmtpEmail.to = [{ email: cleanRecipient }];
+    const response = await fetch(BREVO_API_URL, {
+      method: "POST",
+      headers: {
+        "accept": "application/json",
+        "api-key": process.env.BREVO_API_KEY,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: { name: "DashBite", email: "janvichhirang@gmail.com" },
+        to: [{ email: cleanRecipient }],
+        subject: "Delivery Confirmation OTP",
+        htmlContent: `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`,
+      }),
+    });
 
-    return await apiInstance.sendTransacEmail(sendSmtpEmail);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to send email");
+    }
+
+    return data;
   } catch (error) {
-    console.error("Brevo sendDeliveryOTP Error:", error.response?.body || error.message);
+    console.error("Brevo sendDeliveryOTP Error:", error.message);
     throw error;
   }
 };
