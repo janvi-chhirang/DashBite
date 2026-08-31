@@ -1,8 +1,14 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 dotenv.config();
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+});
 
 export const sendOtpMail = async (to, otp) => {
   const recipient = (typeof to === "object" ? to?.email : to)
@@ -11,9 +17,8 @@ export const sendOtpMail = async (to, otp) => {
 
   if (!recipient) throw new Error("Recipient email is missing");
 
-  // Testing ke liye "onboarding@resend.dev" default sender hota hai
-  return await resend.emails.send({
-    from: "onboarding@resend.dev",
+  return await transporter.sendMail({
+    from: `"DashBite" <${process.env.EMAIL_USER}>`,
     to: recipient,
     subject: "Reset Your Password",
     html: `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`,
@@ -26,8 +31,8 @@ export const sendDeliveryOTP = async (user, otp) => {
 
   const cleanRecipient = String(rawEmail).replace(/['"<>]/g, "").trim();
 
-  return await resend.emails.send({
-    from: "onboarding@resend.dev",
+  return await transporter.sendMail({
+    from: `"DashBite" <${process.env.EMAIL_USER}>`,
     to: cleanRecipient,
     subject: "Delivery Confirmation OTP",
     html: `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`,
