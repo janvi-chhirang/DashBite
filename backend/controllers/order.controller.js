@@ -771,7 +771,6 @@ export const sendDeliveryOTP = async (req, res) => {
   }
 };
 
-
 export const verifyDeliveryOTP = async (req, res) => {
   try {
     const { orderId, shopOrderId, otp } = req.body;
@@ -789,7 +788,9 @@ export const verifyDeliveryOTP = async (req, res) => {
     let targetShopOrder = null;
     if (order.shopOrders && order.shopOrders.length > 0) {
       targetShopOrder = shopOrderId
-        ? order.shopOrders.find((so) => so._id.toString() === shopOrderId.toString())
+        ? order.shopOrders.find(
+            (so) => so._id.toString() === shopOrderId.toString(),
+          )
         : order.shopOrders[0];
     }
 
@@ -798,7 +799,10 @@ export const verifyDeliveryOTP = async (req, res) => {
     }
 
     // OTP verification check
-    if (targetShopOrder.otp && targetShopOrder.otp.toString() !== otp.toString()) {
+    if (
+      targetShopOrder.otp &&
+      targetShopOrder.otp.toString() !== otp.toString()
+    ) {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
@@ -806,6 +810,14 @@ export const verifyDeliveryOTP = async (req, res) => {
     targetShopOrder.status = "Delivered";
     targetShopOrder.deliveredAt = new Date();
     order.status = "Delivered";
+
+    // COD orders are paid in cash at the time of delivery, so mark payment
+    // as completed once delivery is confirmed. Online payments already have
+    // `payment: true` set at the payment-verification step, so this only
+    // affects COD orders.
+    if (order.paymentMethod === "cod") {
+      order.payment = true;
+    }
 
     await order.save();
 
