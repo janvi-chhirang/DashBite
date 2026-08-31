@@ -1,20 +1,12 @@
-import nodemailer from "nodemailer";
+import * as brevo from "@getbrevo/brevo";
 import dotenv from "dotenv";
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  family: 4, // <-- Force IPv4 (fixes ENETUNREACH on Render)
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+const apiInstance = new brevo.TransactionalEmailsApi();
+apiInstance.setApiKey(
+  brevo.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 export const sendOtpMail = async (to, otp) => {
   try {
@@ -24,14 +16,15 @@ export const sendOtpMail = async (to, otp) => {
 
     if (!recipient) throw new Error("Recipient email is missing");
 
-    return await transporter.sendMail({
-      from: `"DashBite" <${process.env.EMAIL_USER}>`,
-      to: recipient,
-      subject: "Reset Your Password",
-      html: `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-    });
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.subject = "Reset Your Password";
+    sendSmtpEmail.htmlContent = `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 5 minutes.</p>`;
+    sendSmtpEmail.sender = { name: "DashBite", email: "janvichhirang@gmail.com" };
+    sendSmtpEmail.to = [{ email: recipient }];
+
+    return await apiInstance.sendTransacEmail(sendSmtpEmail);
   } catch (error) {
-    console.error("Nodemailer sendOtpMail Error:", error.message);
+    console.error("Brevo sendOtpMail Error:", error.response?.body || error.message);
     throw error;
   }
 };
@@ -43,14 +36,15 @@ export const sendDeliveryOTP = async (user, otp) => {
 
     const cleanRecipient = String(rawEmail).replace(/['"<>]/g, "").trim();
 
-    return await transporter.sendMail({
-      from: `"DashBite" <${process.env.EMAIL_USER}>`,
-      to: cleanRecipient,
-      subject: "Delivery Confirmation OTP",
-      html: `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`,
-    });
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.subject = "Delivery Confirmation OTP";
+    sendSmtpEmail.htmlContent = `<p>Your OTP for delivery is <b>${otp}</b>. It expires in 5 minutes.</p>`;
+    sendSmtpEmail.sender = { name: "DashBite", email: "janvichhirang@gmail.com" };
+    sendSmtpEmail.to = [{ email: cleanRecipient }];
+
+    return await apiInstance.sendTransacEmail(sendSmtpEmail);
   } catch (error) {
-    console.error("Nodemailer sendDeliveryOTP Error:", error.message);
+    console.error("Brevo sendDeliveryOTP Error:", error.response?.body || error.message);
     throw error;
   }
 };
