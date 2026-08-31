@@ -50,17 +50,20 @@ app.use("/api/order", orderRouter);
 
 socketHandler(io);
 
-// ---------------- SPA Catch-All Fallback ----------------
+// ---------------- SPA Catch-All Fallback (Express v5 Compatible) ----------------
 const __dirname = path.resolve();
 
 // Serve frontend dist build folder
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
-// Any non-API route serves index.html (fixes Refresh Not Found)
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
+// Any non-API route serves index.html safely
+app.use((req, res, next) => {
+  if (!req.path.startsWith("/api")) {
+    return res.sendFile(path.resolve(__dirname, "../frontend", "dist", "index.html"));
+  }
+  next();
 });
-// --------------------------------------------------------
+// --------------------------------------------------------------------------------
 
 server.listen(PORT, () => {
   connectdb();
